@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>pH Detection from Captured Image</title>
+    <style>
+        canvas, video {
+            display: block;
+            margin: auto;
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Capture Photo and Detect pH</h1>
+    <video id="video" width="320" height="240" autoplay></video>
+    <button id="capture">Capture Photo</button>
+    <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+    
+    <form id="upload-form" enctype="multipart/form-data">
+        <label for="saturation">Saturation:</label>
+        <input type="range" id="saturation" name="saturation" min="0" max="2" step="0.1" value="1"><br><br>
+        
+        <label for="brightness">Brightness:</label>
+        <input type="range" id="brightness" name="brightness" min="0" max="2" step="0.1" value="1"><br><br>
+        
+        <label for="resize">Resize Image:</label>
+        <input type="number" id="resize" name="resize" min="100" max="500" value="320"><br><br>
+        
+        <label for="x">X Coordinate:</label>
+        <input type="number" id="x" name="x" min="0" value="0"><br><br>
+        
+        <label for="y">Y Coordinate:</label>
+        <input type="number" id="y" name="y" min="0" value="0"><br><br>
+        
+        <button type="button" onclick="uploadImage()">Submit</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(error => {
+                console.error("Error accessing camera:", error);
+            });
+
+        document.getElementById('capture').addEventListener('click', () => {
+            const resizeValue = document.getElementById('resize').value;
+            canvas.width = resizeValue;
+            canvas.height = resizeValue * (video.videoHeight / video.videoWidth);
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.style.display = 'block';
+        });
+
+        function uploadImage() {
+            canvas.toBlob(blob => {
+                const formData = new FormData(document.getElementById('upload-form'));
+                formData.append('file', blob, 'captured_image.png');
+                
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                }).then(response => response.json()).then(data => {
+                    document.getElementById('result').innerHTML = `pH Value: ${data.ph_value}, RGB: ${data.rgb}`;
+                });
+            }, 'image/png');
+        }
+    </script>
+</body>
+</html>
