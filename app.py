@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 import numpy as np
 from tensorflow.keras.models import load_model
-
+import os
 # Initialize Flask App
 app = Flask(__name__)
 
@@ -46,4 +46,5 @@ def predict():
         return jsonify({"error": "Invalid input. Please provide 'r', 'g', and 'b' as integers."}), 400
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Default to 5000 if PORT not set
+    app.run(host="0.0.0.0", port=port)
