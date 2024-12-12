@@ -6,15 +6,12 @@ import numpy as np
 # Initialize Flask app
 app = Flask(__name__)
 
-# Ensure the model file exists in the correct path
-MODEL_PATH = "fixed_model.keras"  # Modify this path if the model is in a different location
-
-# Check if the model file exists
-if not os.path.exists(MODEL_PATH):
-    raise FileNotFoundError(f"The model file '{MODEL_PATH}' was not found. Please ensure it's correctly uploaded.")
-
 # Load the trained model
-model = load_model(MODEL_PATH)
+model = load_model("fixed_model.keras")  # Ensure the model file is named 'fixed_model.keras' and uploaded to your project
+
+@app.route("/")
+def home():
+    return "Welcome to the Prediction API!"
 
 @app.route("/predict", methods=["POST"])
 def predict_ph():
@@ -48,5 +45,5 @@ def predict_ph():
 
 if __name__ == "__main__":
     # Get the port from the environment variable or use the default port 5000
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
