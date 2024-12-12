@@ -2,75 +2,52 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>pH Detection from Captured Image</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pH Prediction</title>
     <style>
-        canvas, video {
-            display: block;
-            margin: auto;
-            max-width: 100%;
-            height: auto;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+        }
+        input, button {
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 16px;
         }
     </style>
 </head>
 <body>
-    <h1>Capture Photo and Detect pH</h1>
-    <video id="video" width="320" height="240" autoplay></video>
-    <button id="capture">Capture Photo</button>
-    <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
-    
-    <form id="upload-form" enctype="multipart/form-data">
-        <label for="saturation">Saturation:</label>
-        <input type="range" id="saturation" name="saturation" min="0" max="2" step="0.1" value="1"><br><br>
-        
-        <label for="brightness">Brightness:</label>
-        <input type="range" id="brightness" name="brightness" min="0" max="2" step="0.1" value="1"><br><br>
-        
-        <label for="resize">Resize Image:</label>
-        <input type="number" id="resize" name="resize" min="100" max="500" value="320"><br><br>
-        
-        <label for="x">X Coordinate:</label>
-        <input type="number" id="x" name="x" min="0" value="0"><br><br>
-        
-        <label for="y">Y Coordinate:</label>
-        <input type="number" id="y" name="y" min="0" value="0"><br><br>
-        
-        <button type="button" onclick="uploadImage()">Submit</button>
+    <h1>pH Prediction from RGB</h1>
+    <form id="phForm">
+        <label for="r">Red (R):</label>
+        <input type="number" id="r" name="r" min="0" max="255" required>
+        <br>
+        <label for="g">Green (G):</label>
+        <input type="number" id="g" name="g" min="0" max="255" required>
+        <br>
+        <label for="b">Blue (B):</label>
+        <input type="number" id="b" name="b" min="0" max="255" required>
+        <br>
+        <button type="button" onclick="submitRGB()">Predict pH</button>
     </form>
-    <div id="result"></div>
-
+    <h3 id="result"></h3>
     <script>
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const context = canvas.getContext('2d');
-
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-                video.srcObject = stream;
-            })
-            .catch(error => {
-                console.error("Error accessing camera:", error);
+        async function submitRGB() {
+            const r = document.getElementById("r").value;
+            const g = document.getElementById("g").value;
+            const b = document.getElementById("b").value;
+            const response = await fetch("/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ r: r, g: g, b: b })
             });
-
-        document.getElementById('capture').addEventListener('click', () => {
-            const resizeValue = document.getElementById('resize').value;
-            canvas.width = resizeValue;
-            canvas.height = resizeValue * (video.videoHeight / video.videoWidth);
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            canvas.style.display = 'block';
-        });
-
-        function uploadImage() {
-            canvas.toBlob(blob => {
-                const formData = new FormData(document.getElementById('upload-form'));
-                formData.append('file', blob, 'captured_image.png');
-                
-                fetch('/upload', {
-                    method: 'POST',
-                    body: formData
-                }).then(response => response.json()).then(data => {
-                    document.getElementById('result').innerHTML = `pH Value: ${data.ph_value}, RGB: ${data.rgb}`;
-                });
-            }, 'image/png');
+            const data = await response.json();
+            if (response.ok) {
+                document.getElementById("result").innerText = `Predicted pH: ${data.predicted_ph}`;
+            } else {
+                document.getElementById("result").innerText = `Error: ${data.error}`;
+            }
         }
     </script>
 </body>
