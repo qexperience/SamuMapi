@@ -1,50 +1,45 @@
-from flask import Flask, request, jsonify, render_template
-import numpy as np
-from tensorflow.keras.models import load_model
 import os
-# Initialize Flask App
+from flask import Flask, request, jsonify
+from tensorflow.keras.models import load_model
+import numpy as np
+
+# Initialize Flask app
 app = Flask(__name__)
 
 # Load the trained model
-model = load_model("final_ph_model.keras")
-
-# Define a function to predict pH from RGB
-def predict_ph_from_rgb(r, g, b):
-    """
-    Predict the pH value given an RGB triplet using the loaded model.
-    Parameters:
-        r (int): Red component (0-255)
-        g (int): Green component (0-255)
-        b (int): Blue component (0-255)
-    Returns:
-        float: Predicted pH value (clamped to range [0, 14]) with 4 decimal places
-    """
-    input_rgb = np.array([[r, g, b]]) / 255.0  # Normalize RGB values to [0, 1]
-    predicted_ph = model.predict(input_rgb)[0][0] * 14  # Scale back to pH range [0, 14]
-    return round(max(0, min(14, predicted_ph)), 4)  # Clamp and round to 4 decimal places
-
-# Define routes
-@app.route("/")
-def home():
-    return render_template("index.html")  # Serves the HTML front-end
+model = load_model("fixed_model.keras")  # Ensure the model file is named 'fixed_model.keras' and uploaded to your project
 
 @app.route("/predict", methods=["POST"])
-def predict():
-    # Get data from the POST request
-    data = request.get_json()
+def predict_ph():
+    """
+    Predict the pH value based on RGB input provided in the POST request.
+    """
     try:
-        r = int(data["r"])
-        g = int(data["g"])
-        b = int(data["b"])
-        # Validate the RGB values
-        if 0 <= r <= 255 and 0 <= g <= 255 and 0 <= b <= 255:
-            predicted_ph = predict_ph_from_rgb(r, g, b)
-            return jsonify({"predicted_ph": predicted_ph})
-        else:
-            return jsonify({"error": "RGB values must be in the range 0-255."}), 400
-    except (ValueError, KeyError):
-        return jsonify({"error": "Invalid input. Please provide 'r', 'g', and 'b' as integers."}), 400
+        # Parse input JSON
+        data = request.json
+        if "r" not in data or "g" not in data or "b" not in data:
+            return jsonify({"error": "Please provide 'r', 'g', and 'b' values."}), 400
+        
+        r, g, b = data["r"], data["g"], data["b"]
+        
+        # Validate input values
+        if not (0 <= r <= 255 and 0 <= g <= 255 and 0 <= b <= 255):
+            return jsonify({"error": "RGB values must be between 0 and 255."}), 400
+        
+        # Format input for the model
+        input_rgb = np.array([[r, g, b]])
+        
+        # Predict pH value
+        predicted_ph = model.predict(input_rgb)[0][0]
+        predicted_ph = max(0, min(14, predicted_ph))  # Clamp the pH value to the range [0, 14]
+        
+        # Return the prediction
+        return jsonify({"predicted_ph": round(predicted_ph, 4)})
+    
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Default to 5000 if PORT not set
+    # Get the port from the environment variable or use the default port 5000
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
