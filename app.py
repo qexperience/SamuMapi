@@ -6,8 +6,15 @@ import numpy as np
 # Initialize Flask app
 app = Flask(__name__)
 
+# Ensure the model file exists in the correct path
+MODEL_PATH = "fixed_model.keras"  # Modify this path if the model is in a different location
+
+# Check if the model file exists
+if not os.path.exists(MODEL_PATH):
+    raise FileNotFoundError(f"The model file '{MODEL_PATH}' was not found. Please ensure it's correctly uploaded.")
+
 # Load the trained model
-model = load_model("fixed_model.keras")  # Ensure the model file is named 'fixed_model.keras' and uploaded to your project
+model = load_model(MODEL_PATH)
 
 @app.route("/predict", methods=["POST"])
 def predict_ph():
