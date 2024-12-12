@@ -3,52 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>pH Prediction</title>
+    <title>RGB to pH Predictor</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
-            padding: 20px;
+            margin: 40px;
+            background-color: #f4f4f9;
         }
-        input, button {
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            display: block;
             margin: 10px 0;
+            font-weight: bold;
+        }
+
+        input[type="number"] {
+            width: 100%;
             padding: 10px;
-            font-size: 16px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e7f7e7;
+            border-radius: 4px;
+            border: 1px solid #c8e6c9;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+
+        .error {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #ffebee;
+            border-radius: 4px;
+            border: 1px solid #ef9a9a;
+            font-weight: bold;
+            color: #d32f2f;
         }
     </style>
 </head>
 <body>
-    <h1>pH Prediction from RGB</h1>
-    <form id="phForm">
-        <label for="r">Red (R):</label>
+
+    <div class="container">
+        <h1>RGB to pH Predictor</h1>
+
+        <label for="r">Red (R) value (0-255):</label>
         <input type="number" id="r" name="r" min="0" max="255" required>
-        <br>
-        <label for="g">Green (G):</label>
+
+        <label for="g">Green (G) value (0-255):</label>
         <input type="number" id="g" name="g" min="0" max="255" required>
-        <br>
-        <label for="b">Blue (B):</label>
+
+        <label for="b">Blue (B) value (0-255):</label>
         <input type="number" id="b" name="b" min="0" max="255" required>
-        <br>
-        <button type="button" onclick="submitRGB()">Predict pH</button>
-    </form>
-    <h3 id="result"></h3>
+
+        <button id="predictBtn">Predict pH</button>
+
+        <div id="result" class="result" style="display: none;"></div>
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+
     <script>
-        async function submitRGB() {
-            const r = document.getElementById("r").value;
-            const g = document.getElementById("g").value;
-            const b = document.getElementById("b").value;
-            const response = await fetch("/predict", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ r: r, g: g, b: b })
+        $(document).ready(function() {
+            $("#predictBtn").click(function() {
+                // Get the RGB values from the input fields
+                var r = $("#r").val();
+                var g = $("#g").val();
+                var b = $("#b").val();
+
+                // Clear previous results
+                $("#result").hide();
+                $("#error").hide();
+
+                // Validate RGB values
+                if (r === "" || g === "" || b === "") {
+                    $("#error").text("Please enter all RGB values (0-255).").show();
+                    return;
+                }
+
+                r = parseInt(r);
+                g = parseInt(g);
+                b = parseInt(b);
+
+                if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+                    $("#error").text("RGB values must be between 0 and 255.").show();
+                    return;
+                }
+
+                // Prepare the payload
+                var data = {
+                    r: r,
+                    g: g,
+                    b: b
+                };
+
+                // Make the POST request to the Flask server
+                $.ajax({
+                    url: "http://127.0.0.1:5000/predict",  // Adjust if you're using a different URL or port
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        // Show the predicted pH value
+                        $("#result").text("Predicted pH: " + response.predicted_ph).show();
+                    },
+                    error: function(xhr, status, error) {
+                        // Handle errors
+                        var errorMessage = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : "An error occurred.";
+                        $("#error").text(errorMessage).show();
+                    }
+                });
             });
-            const data = await response.json();
-            if (response.ok) {
-                document.getElementById("result").innerText = `Predicted pH: ${data.predicted_ph}`;
-            } else {
-                document.getElementById("result").innerText = `Error: ${data.error}`;
-            }
-        }
+        });
     </script>
+
 </body>
 </html>
