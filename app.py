@@ -2,16 +2,25 @@ import os
 from flask import Flask, request, jsonify
 from tensorflow.keras.models import load_model
 import numpy as np
+from flask_cors import CORS  # Import CORS to handle cross-origin requests
 
 # Initialize Flask app
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # Load the trained model
-model = load_model("fixed_model.keras")  # Ensure the model file is named 'fixed_model.keras' and uploaded to your project
+try:
+    model = load_model("fixed_model.keras")  # Ensure the model file is correctly named and in the same directory
+    print("Model loaded successfully!")
+except Exception as e:
+    print(f"Error loading model: {e}")
 
 @app.route("/")
 def home():
-    return "Welcome to the Prediction API!"
+    """
+    Home route to confirm the API is running.
+    """
+    return jsonify({"message": "API is live. Use the /predict endpoint for predictions."})
 
 @app.route("/predict", methods=["POST"])
 def predict_ph():
