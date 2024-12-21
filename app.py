@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, request, jsonify
 from tensorflow.keras.models import load_model
 import numpy as np
 from flask_cors import CORS  # Import CORS to handle cross-origin requests
@@ -16,7 +16,9 @@ except Exception as e:
     print(f"Error loading model: {e}")
 
 @app.route("/")
-return render_template('index.html')
+def home():
+    # This route will serve the index.html page
+    return render_template('index.html')
 
 @app.route("/predict", methods=["POST"])
 def predict_ph():
