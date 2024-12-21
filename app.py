@@ -1,27 +1,19 @@
 import os
-from flask import Flask, request, jsonify, make_response
+from flask import Flask, request, jsonify
 from tensorflow.keras.models import load_model
 import numpy as np
+from flask_cors import CORS  # Import CORS to handle cross-origin requests
 
 # Initialize Flask app
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # Load the trained model
 try:
-    model = load_model("fixed_model.keras")  # Ensure the model file is named correctly
+    model = load_model("fixed_model.keras")  # Ensure the model file is correctly named and in the same directory
     print("Model loaded successfully!")
 except Exception as e:
     print(f"Error loading model: {e}")
-
-@app.after_request
-def add_cors_headers(response):
-    """
-    Add CORS headers to every response to allow cross-origin requests.
-    """
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    return response
 
 @app.route("/")
 def home():
