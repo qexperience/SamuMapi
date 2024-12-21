@@ -16,11 +16,7 @@ except Exception as e:
     print(f"Error loading model: {e}")
 
 @app.route("/")
-def home():
-    """
-    Home route to confirm the API is running.
-    """
-    return jsonify({"message": "API is live. Use the /predict endpoint for predictions."})
+return render_template('index.html')
 
 @app.route("/predict", methods=["POST"])
 def predict_ph():
