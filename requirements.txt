@@ -1,5 +1,6 @@
-Flask==2.3.3
+distutils
+streamlit
 tensorflow==2.17.1
-gunicorn==21.2.0
 numpy==1.23.5
-flask-cors==5.0.0  # Compatible version
+flask==2.3.3
+gunicorn==21.2.0
