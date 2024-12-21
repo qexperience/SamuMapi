@@ -1,6 +1,6 @@
-distutils
 streamlit
 tensorflow==2.17.1
 numpy==1.23.5
 flask==2.3.3
 gunicorn==21.2.0
+
